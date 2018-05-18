@@ -1,4 +1,4 @@
-#include<stdio.h>
+;include<stdio.h>
 #include<stdlib.h>
 #include<math.h>
 #include<X11/Xlib.h>
@@ -7,7 +7,7 @@
 
 #define Isize  512	//取り扱う画像のサイズX
 #define Jsize  Isize	//取り扱う画像のサイズY
-#define Bnum   6 	//ボタンの数
+#define Bnum   7 	//ボタンの数
 #define Xsize  Jsize*2+Right+5	//表示ウィンドウのサイズX
 #define Ysize  Isize+5	//表示ウインドウのサイズY
 #define Right  100	//表示ウィンドウ内の右側スペースサイズ
@@ -24,6 +24,7 @@ XImage     *ImageW1,*ImageW2;
 unsigned long Dep;
 
 unsigned char dat1[Isize][Jsize];	//階調変換用
+unsigned char dat2[Isize][Jsize];   //線形濃度変換用
 unsigned char dat[Isize][Jsize];	//取り扱う画像データ格納用
 unsigned char tiffdat[Isize][Jsize];	//tiff形式で保存する際の画像データ格納用
 int buff[Isize*Jsize];	
@@ -138,6 +139,30 @@ void change_step()
     }
     view_imgW2(dat1);	//右側ウィンドウに画像を表示する関数を呼び出し
 }
+//線形濃度変換
+void noudo_henkan()
+{
+    int i,j;
+    unsigned char max,min;
+
+    max=min=dat[0][0];     //最大値と最小値の初期値を設定
+    for(i=0;i<Isize;i++){
+        for(j=0;j<Jsize;j++){
+            if(dat[i][j]>max) max=dat[i][j] ;            //画像の最大値を取得
+            if(dat[i][j]<min) min=dat[i][j] ;            //画像の最小値を取得
+        }
+    }
+    for(i=0;i<Isize;i++){
+        for(j=0;j<Jsize;j++){
+            if(dat[i][j]<min) dat2[i][j]= 0;          //minより小さいものは０とする．
+            else if(dat[i][j]>max) dat2[i][j]= 255;    //maxより大きいものは２５５とする．
+            else{
+                dat2[i][j]=(unsigned char)((255/(max-min))*(dat[i][j]-min));  //それ以外は，授業中に習った式を．
+            }
+        }
+    }
+    view_imgW2(dat2);
+}
 
 //windowの初期設定
 void init_window()
@@ -212,7 +237,8 @@ void event_select()
 				XDrawImageString(d,Bt[1],Gc,28,21,"ViewW1",6);
 				XDrawImageString(d,Bt[2],Gc,28,21,"ViewW2",6);
 				XDrawImageString(d,Bt[3],Gc,28,21,"Save",4);
-				XDrawImageString(d,Bt[4],Gc,28,21,"Grad",4);
+				XDrawImageString(d,Bt[4],Gc,28,21,"tone",4);
+				XDrawImageString(d,Bt[5],Gc,28,21,"line",4);
 				XDrawImageString(d,Bt[Bnum-1],Gc,28,21,"Quit",4);
 			break;
 			//ボタンが押された場合
@@ -231,6 +257,9 @@ void event_select()
                 }
 				if(Ev.xany.window == Bt[4]){
 						change_step();
+				}
+				if(Ev.xany.window == Bt[5]){
+				        noudo_henkan();
 				}
 				if(Ev.xany.window == Bt[Bnum-1]){
 					exit(1);
