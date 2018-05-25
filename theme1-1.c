@@ -26,8 +26,9 @@ unsigned long Dep;
 unsigned char dat1[Isize][Jsize];	//階調変換用
 unsigned char dat2[Isize][Jsize];   //線形濃度変換用
 unsigned char dat3[Isize][Jsize];   //ネガポジ反転用
-short int fdat[Isize][Jsize];	//鮮鋭化フィルタ用
-unsigned char dat4[Isize][Jsize];	//鮮鋭化フィルタ用
+short int fdat[Isize][Jsize];	//各種フィルタ用
+unsigned char dat4[Isize][Jsize];	//各種フィルタ用
+unsigned char dat5[Isize][Jsize];
 int f[3][3]={{0,-1,0},
 			 {-1,5,-1},
 			 {0,-1,0}};				//鮮鋭化フィルタ
@@ -178,16 +179,16 @@ void negaposi_reverse()
 
     for(i=0;i<Isize;i++){
         for(j=0;j<Jsize;j++){
-                dat3[i][j]=(unsigned char)(255-dat[i][j]);  
-           		 }
-            }
+                dat3[i][j]=(unsigned char)(255.0-dat[i][j]);  
+            	}
+		}
 		view_imgW2(dat3);
 }
 
 //鮮鋭化フィルタ
 void filter_operation()
 {
-    int i,j,max,min;
+    int i,j,k,l,c,m,n,max,min;
 
     //初期化
     for(i=0;i<Isize;i++){
@@ -195,6 +196,15 @@ void filter_operation()
             fdat[i][j]=0;
         }
     }
+	for(i=1;i<Isize;i++){
+			for(j=1;j<Jsize;j++){
+					for(k=-1;k<=1;k++){
+							for(l=-1;l<=1;l++){
+									fdat[i][j]+=dat[i+k][j+l]*f[k+1][l+1];
+							}
+					}
+			}
+	}
 	//for(i=0;i<Isize;i++){
 	//		for(j=0;j<Jsize;j++){
 	//			fdat[i][j]=dat[i][j]-dat[i+1,j+1];
@@ -258,7 +268,7 @@ unsigned char sort(int a, int b)
             }
         }
     }
-    return       ;      //中間値を返す．
+    return    c[4]   ;      //中間値を返す．
 }
 
 
