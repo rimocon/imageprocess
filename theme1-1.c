@@ -7,7 +7,7 @@
 
 #define Isize  512	//取り扱う画像のサイズX
 #define Jsize  Isize	//取り扱う画像のサイズY
-#define Bnum   8 	//ボタンの数
+#define Bnum   10 	//ボタンの数
 #define Xsize  Jsize*2+Right+5	//表示ウィンドウのサイズX
 #define Ysize  Isize+5	//表示ウインドウのサイズY
 #define Right  100	//表示ウィンドウ内の右側スペースサイズ
@@ -26,10 +26,16 @@ unsigned long Dep;
 unsigned char dat1[Isize][Jsize];	//階調変換用
 unsigned char dat2[Isize][Jsize];   //線形濃度変換用
 unsigned char dat3[Isize][Jsize];   //ネガポジ反転用
+short int fdat[Isize][Jsize];	//鮮鋭化フィルタ用
+unsigned char dat4[Isize][Jsize];	//鮮鋭化フィルタ用
+int f[3][3]={{0,-1,0},
+			 {-1,5,-1},
+			 {0,-1,0}};				//鮮鋭化フィルタ
 unsigned char dat[Isize][Jsize];	//取り扱う画像データ格納用
 unsigned char tiffdat[Isize][Jsize];	//tiff形式で保存する際の画像データ格納用
 int buff[Isize*Jsize];	
 unsigned char buffer[Isize*Jsize];
+
 
 //表示画像をTIFF形式で保存する関数
 void tiff_save(unsigned char img[Isize][Jsize]){
@@ -158,7 +164,7 @@ void noudo_henkan()
             if(dat[i][j]<min) dat2[i][j]= 0;          //minより小さいものは０とする．
             else if(dat[i][j]>max) dat2[i][j]= 255;    //maxより大きいものは２５５とする．
             else{
-                dat2[i][j]=(unsigned char)((255/(max-min))*(dat[i][j]-min));  //それ以外は，授業中に習った式を．
+                dat2[i][j]=(unsigned char)((255/(max-min))*(dat[i][j]-min));  
             }
         }
     }
@@ -167,14 +173,96 @@ void noudo_henkan()
 //ネガポジ反転
 void negaposi_reverse()
 {
-		int i,j;
-		for(i=0;i<Isize;i++){
-				for(j=0;j<Jsize;j++){
-						dat3[i][j]=255-dat[i][j];
-				}
-		}
+	int i,j;
+	unsigned char max,min;
+
+    for(i=0;i<Isize;i++){
+        for(j=0;j<Jsize;j++){
+                dat3[i][j]=(unsigned char)(255-dat[i][j]);  
+           		 }
+            }
 		view_imgW2(dat3);
 }
+
+//鮮鋭化フィルタ
+void filter_operation()
+{
+    int i,j,max,min;
+
+    //初期化
+    for(i=0;i<Isize;i++){
+        for(j=0;j<Jsize;j++){
+            fdat[i][j]=0;
+        }
+    }
+	//for(i=0;i<Isize;i++){
+	//		for(j=0;j<Jsize;j++){
+	//			fdat[i][j]=dat[i][j]-dat[i+1,j+1];
+	//		}
+	
+  //
+  //     フィルタリング処理 
+  //
+
+//short int型のfdat から最大値と最小値を求め，256階調のデータdat3を作成する．
+    max=min=fdat[1][1];
+    for(i=1;i<Isize-1;i++){
+        for(j=1;j<Jsize-1;j++){
+            if(fdat[i][j]>max) max=fdat[i][j];
+            if(fdat[i][j]<min) min=fdat[i][j];
+        }
+    }
+    for(i=0;i<Isize;i++){
+        for(j=0;j<Jsize;j++){
+            if(fdat[i][j]<min) dat4[i][j]=0;
+            else if(fdat[i][j]>max) dat4[i][j]=255;
+            else{
+                dat4[i][j]=(unsigned char)
+                   ((fdat[i][j]-min)*255./(float)(max-min));
+            }
+        }
+    }
+    view_imgW2(dat4);
+}
+//メディアンフィルタ
+void median_filter()
+{
+    int i,j;
+    unsigned char sort();
+    for(i=1;i<Isize-1;i++){
+        for(j=1;j<Jsize-1;j++){
+            dat5[i][j]=sort(i,j);
+        }
+    }
+    view_imgW2(dat5);
+}
+
+unsigned char sort(int a, int b)
+{
+    int i,j,k;
+    unsigned char c[9],buf;
+
+    k=0;
+    for(i=a-1;i<=a+1;i++){
+        for(j=b-1;j<=b+1;j++){
+            c[k]=dat[i][j];
+            k++;
+        }
+    }
+    for(j=0;j<9;j++){
+        for(i=0;i<8;i++){
+            if(c[i] > c[i+1]){
+                buf=c[i];
+				c[i]=c[i+1];
+				c[i+1]=buf;
+            }
+        }
+    }
+    return       ;      //中間値を返す．
+}
+
+
+
 
 //windowの初期設定
 void init_window()
@@ -252,6 +340,8 @@ void event_select()
 				XDrawImageString(d,Bt[4],Gc,28,21,"tone",4);
 				XDrawImageString(d,Bt[5],Gc,28,21,"line",4);
 				XDrawImageString(d,Bt[6],Gc,28,21,"npreverse",9);
+				XDrawImageString(d,Bt[7],Gc,28,21,"sharpening",10);
+				XDrawImageString(d,Bt[8],Gc,28,21,"median",6);
 				XDrawImageString(d,Bt[Bnum-1],Gc,28,21,"Quit",4);
 			break;
 			//ボタンが押された場合
@@ -276,6 +366,12 @@ void event_select()
 				}
 				if(Ev.xany.window == Bt[6]){
 				        negaposi_reverse();
+				}
+				if(Ev.xany.window == Bt[7]){
+						filter_operation();
+				}
+				if(Ev.xany.window == Bt[8]){
+						median_filter();
 				}
 				if(Ev.xany.window == Bt[Bnum-1]){
 					exit(1);
