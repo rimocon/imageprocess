@@ -7,7 +7,7 @@
 
 #define Isize  512	//取り扱う画像のサイズX
 #define Jsize  Isize	//取り扱う画像のサイズY
-#define Bnum   10 	//ボタンの数
+#define Bnum   11 	//ボタンの数
 #define Xsize  Jsize*2+Right+5	//表示ウィンドウのサイズX
 #define Ysize  Isize+5	//表示ウインドウのサイズY
 #define Right  100	//表示ウィンドウ内の右側スペースサイズ
@@ -28,10 +28,10 @@ unsigned char dat2[Isize][Jsize];   //線形濃度変換用
 unsigned char dat3[Isize][Jsize];   //ネガポジ反転用
 short int fdat[Isize][Jsize];	//各種フィルタ用
 unsigned char dat4[Isize][Jsize];	//各種フィルタ用
-unsigned char dat5[Isize][Jsize];
+unsigned char dat5[Isize][Jsize];   //メディアンフィルタ用
 int f[3][3]={{0,-1,0},
 			 {-1,5,-1},
-			 {0,-1,0}};				//鮮鋭化フィルタ
+			 {0,-1,0}};			    //フィルタ
 unsigned char dat[Isize][Jsize];	//取り扱う画像データ格納用
 unsigned char tiffdat[Isize][Jsize];	//tiff形式で保存する際の画像データ格納用
 int buff[Isize*Jsize];	
@@ -185,7 +185,24 @@ void negaposi_reverse()
 		view_imgW2(dat3);
 }
 
-//鮮鋭化フィルタ
+//ヒストグラム
+void histogram()
+{
+		int i,j,w;
+		int dat6[256]={0};
+            for(i=0;i<Isize;i++){
+					for(j=0;j<Jsize;j++){
+						dat6[dat[i][j]]++;
+            }
+       }
+		for(i=0;i<256;i++){
+				printf("%d\n",dat6[i]);
+		}
+  }
+		
+		
+
+//フィルタ
 void filter_operation()
 {
     int i,j,k,l,c,m,n,max,min;
@@ -200,19 +217,11 @@ void filter_operation()
 			for(j=1;j<Jsize;j++){
 					for(k=-1;k<=1;k++){
 							for(l=-1;l<=1;l++){
-									fdat[i][j]+=dat[i+k][j+l]*f[k+1][l+1];
+									fdat[i][j]+=dat[i+k][j+l]*f[k+1][l+1];  //畳み込み
 							}
 					}
 			}
 	}
-	//for(i=0;i<Isize;i++){
-	//		for(j=0;j<Jsize;j++){
-	//			fdat[i][j]=dat[i][j]-dat[i+1,j+1];
-	//		}
-	
-  //
-  //     フィルタリング処理 
-  //
 
 //short int型のfdat から最大値と最小値を求め，256階調のデータdat3を作成する．
     max=min=fdat[1][1];
@@ -267,6 +276,7 @@ unsigned char sort(int a, int b)
 				c[i+1]=buf;
             }
         }
+		
     }
     return    c[4]   ;      //中間値を返す．
 }
@@ -352,6 +362,7 @@ void event_select()
 				XDrawImageString(d,Bt[6],Gc,28,21,"npreverse",9);
 				XDrawImageString(d,Bt[7],Gc,28,21,"sharpening",10);
 				XDrawImageString(d,Bt[8],Gc,28,21,"median",6);
+				XDrawImageString(d,Bt[9],Gc,28,21,"histogram",9);
 				XDrawImageString(d,Bt[Bnum-1],Gc,28,21,"Quit",4);
 			break;
 			//ボタンが押された場合
@@ -382,6 +393,9 @@ void event_select()
 				}
 				if(Ev.xany.window == Bt[8]){
 						median_filter();
+				}
+				if(Ev.xany.window == Bt[9]){
+						histogram();
 				}
 				if(Ev.xany.window == Bt[Bnum-1]){
 					exit(1);
