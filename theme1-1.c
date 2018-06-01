@@ -201,12 +201,11 @@ void histogram()
 	}//imageJで確認しろ
 	gp = popen("gnuplot -persist","w");
 	fprintf(gp,"set xrange[0:255]\n");
-	fprintf(gp,"set yrange[0:3000]\n");
+	fprintf(gp,"set yrange[0:4500]\n");
 	fprintf(gp,"plot '-' with lines linetype 1 title \"histogram\"\n");
 
 	for(i=0;i<256;i++){
-			fprintf(gp,"%d\n",dat6[i]);
-			fprintf(gp,"%d\n",i);
+			fprintf(gp,"%d\t%d\n",i,dat6[i]);
 	}
 	fprintf(gp,"e\n");
 
