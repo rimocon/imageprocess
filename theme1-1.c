@@ -188,17 +188,31 @@ void negaposi_reverse()
 //ヒストグラム
 void histogram()
 {
-		int i,j,w;
-		int dat6[256]={0};
-            for(i=0;i<Isize;i++){
-					for(j=0;j<Jsize;j++){
-						dat6[dat[i][j]]++;
-            }
-       }
-		for(i=0;i<256;i++){
+	int i,j,w;
+	int dat6[256]={0};
+	FILE *gp;
+	for(i=0;i<Isize;i++){
+			for(j=0;j<Jsize;j++){
+					dat6[dat[i][j]]++;
+			}
+	}
+	for(i=0;i<256;i++){
 				printf("%d\n",dat6[i]);
-		}
-  }
+	}//imageJで確認しろ
+	gp = popen("gnuplot -persist","w");
+	fprintf(gp,"set xrange[0:255]\n");
+	fprintf(gp,"set yrange[0:3000]\n");
+	fprintf(gp,"plot '-' with lines linetype 1 title \"histogram\"\n");
+
+	for(i=0;i<256;i++){
+			fprintf(gp,"%d\n",dat6[i]);
+			fprintf(gp,"%d\n",i);
+	}
+	fprintf(gp,"e\n");
+
+	pclose(gp);
+
+}
 		
 		
 
