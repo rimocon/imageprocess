@@ -5,15 +5,15 @@
 #include<X11/Xutil.h>
 #include<tiff-4.0.3/libtiff/tiffio.h>
 
-#define Isize  512	//¼è¤ê°·¤¦²èÁü¤Î¥µ¥¤¥ºX
-#define Jsize  Isize	//¼è¤ê°·¤¦²èÁü¤Î¥µ¥¤¥ºY
-#define Bnum   10 	//¥Ü¥¿¥ó¤Î¿ô
-#define Xsize  Jsize*2+Right+5	//É½¼¨¥¦¥£¥ó¥É¥¦¤Î¥µ¥¤¥ºX
-#define Ysize  Isize+5	//É½¼¨¥¦¥¤¥ó¥É¥¦¤Î¥µ¥¤¥ºY
-#define Right  100	//É½¼¨¥¦¥£¥ó¥É¥¦Æâ¤Î±¦Â¦¥¹¥Ú¡¼¥¹¥µ¥¤¥º
+#define Isize  512	//å–ã‚Šæ‰±ã†ç”»åƒã®ã‚µã‚¤ã‚ºX
+#define Jsize  Isize	//å–ã‚Šæ‰±ã†ç”»åƒã®ã‚µã‚¤ã‚ºY
+#define Bnum   10 	//ãƒœã‚¿ãƒ³ã®æ•°
+#define Xsize  Jsize*2+Right+5	//è¡¨ç¤ºã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ã‚µã‚¤ã‚ºX
+#define Ysize  Isize+5	//è¡¨ç¤ºã‚¦ã‚¤ãƒ³ãƒ‰ã‚¦ã®ã‚µã‚¤ã‚ºY
+#define Right  100	//è¡¨ç¤ºã‚¦ã‚£ãƒ³ãƒ‰ã‚¦å†…ã®å³å´ã‚¹ãƒšãƒ¼ã‚¹ã‚µã‚¤ã‚º
 #define BS     100  	
 #define Fcol   255|255<<8|255<<16	
-#define Bcol   1	//¥¦¥£¥ó¥É¥¦¤ÎÇØ·Ê¿§
+#define Bcol   1	//ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®èƒŒæ™¯è‰²
 
 Display    *d;
 Window     Rtw,W,W1,W2,Side,Bt[Bnum];
@@ -26,28 +26,19 @@ unsigned long Dep;
 void init_window(),init_color(),init_image(),
 	event_select();
 
-unsigned char dat[Isize][Jsize];	//¼è¤ê°·¤¦²èÁü¥Ç¡¼¥¿³ÊÇ¼ÍÑ
-unsigned char dat1[Isize][Jsize];
-unsigned char dat2[Isize][Jsize];
-unsigned char dat3[Isize][Jsize];
-unsigned char dat4[Isize][Jsize];
-short int fdat[Isize][Jsize];
-unsigned char tiffdat[Isize][Jsize];	//tiff·Á¼°¤ÇÊİÂ¸¤¹¤ëºİ¤Î²èÁü¥Ç¡¼¥¿³ÊÇ¼ÍÑ
+unsigned char dat[Isize][Jsize];	//å–ã‚Šæ‰±ã†ç”»åƒãƒ‡ãƒ¼ã‚¿æ ¼ç´ç”¨
+unsigned char tiffdat[Isize][Jsize];	//tiffå½¢å¼ã§ä¿å­˜ã™ã‚‹éš›ã®ç”»åƒãƒ‡ãƒ¼ã‚¿æ ¼ç´ç”¨
 int buff[Isize*Jsize];	
 unsigned char buffer[Isize*Jsize];
 
 unsigned char   image[Isize][Jsize];
 unsigned char   bin[Isize][Jsize];
 
-
 int buff[Isize*Jsize];
 int flag;
 
-int f[3][3]={{ 0,-1, 0},
-			 {-1, 5,-1},
-			 { 0,-1, 0}};
 			 
-//É½¼¨²èÁü¤òTIFF·Á¼°¤ÇÊİÂ¸¤¹¤ë´Ø¿ô
+//è¡¨ç¤ºç”»åƒã‚’TIFFå½¢å¼ã§ä¿å­˜ã™ã‚‹é–¢æ•°
 void tiff_save(unsigned char img[Isize][Jsize]){
 	TIFF *image;
 	
@@ -71,30 +62,30 @@ void tiff_save(unsigned char img[Isize][Jsize]){
 	}
 
 	// We need to set some values for basic tags before we can add any data
-	TIFFSetField(image, TIFFTAG_IMAGEWIDTH, Isize);	//²èÁü¤ÎÉı
-	TIFFSetField(image, TIFFTAG_IMAGELENGTH, Jsize);	//²èÁü¤Î¹â¤µ
-	TIFFSetField(image, TIFFTAG_BITSPERSAMPLE, 8);	//¥Ô¥¯¥»¥ë¤Î¿§¿¼ÅÙ¡Ê¥Ó¥Ã¥È¿ô¡Ë
-	TIFFSetField(image, TIFFTAG_SAMPLESPERPIXEL, 1);	//¥Ô¥¯¥»¥ë¤¢¤¿¤ê¤Î¿§¿ô
-	//TIFFSetField(image, TIFFTAG_ROWSPERSTRIP, Jsize);	//¿ô¹Ô¤ò¤Ò¤È¤Ş¤È¤á¤Ë¤·¤Æ1¥¹¥È¥ê¥Ã¥×¤ÈÄêµÁ¤·¤Æ¤¤¤ë¾ì¹ç
+	TIFFSetField(image, TIFFTAG_IMAGEWIDTH, Isize);	//ç”»åƒã®å¹…
+	TIFFSetField(image, TIFFTAG_IMAGELENGTH, Jsize);	//ç”»åƒã®é«˜ã•
+	TIFFSetField(image, TIFFTAG_BITSPERSAMPLE, 8);	//ãƒ”ã‚¯ã‚»ãƒ«ã®è‰²æ·±åº¦ï¼ˆãƒ“ãƒƒãƒˆæ•°ï¼‰
+	TIFFSetField(image, TIFFTAG_SAMPLESPERPIXEL, 1);	//ãƒ”ã‚¯ã‚»ãƒ«ã‚ãŸã‚Šã®è‰²æ•°
+	//TIFFSetField(image, TIFFTAG_ROWSPERSTRIP, Jsize);	//æ•°è¡Œã‚’ã²ã¨ã¾ã¨ã‚ã«ã—ã¦1ã‚¹ãƒˆãƒªãƒƒãƒ—ã¨å®šç¾©ã—ã¦ã„ã‚‹å ´åˆ
 
 	TIFFSetField(image, TIFFTAG_COMPRESSION, COMPRESSION_NONE);
-	TIFFSetField(image, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK);	//²èÁü¤Î¼ïÊÌ(0:mono,1:gray,2:RGB,3:index color,6:YCrCb)
+	TIFFSetField(image, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK);	//ç”»åƒã®ç¨®åˆ¥(0:mono,1:gray,2:RGB,3:index color,6:YCrCb)
 	TIFFSetField(image, TIFFTAG_FILLORDER, FILLORDER_MSB2LSB);
-	TIFFSetField(image, TIFFTAG_PLANARCONFIG, PLANARCONFIG_SEPARATE);	//¤³¤Î¥¿¥°¤Î¿ôÃÍ¤¬1¡ÊCONTIG¡Ë¤Ê¤é¤ĞBIPÇÛÎó¡¢2¡ÊSEPARATE¡Ë¤Ê¤éBILÇÛÎó
+	TIFFSetField(image, TIFFTAG_PLANARCONFIG, PLANARCONFIG_SEPARATE);	//ã“ã®ã‚¿ã‚°ã®æ•°å€¤ãŒ1ï¼ˆCONTIGï¼‰ãªã‚‰ã°BIPé…åˆ—ã€2ï¼ˆSEPARATEï¼‰ãªã‚‰BILé…åˆ—
 
-	TIFFSetField(image, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);	//¸¶ÅÀ³«»Ï°ÌÃÖ¤ò»ØÄê
-	//TIFFSetField(image, TIFFTAG_XRESOLUTION, 512.0);	//X¤Ë¤ª¤±¤ëpixels/resolution¤ò°ÕÌ£¤¹¤ë¡£¼ÂÀ£¤Î¥µ¥¤¥º¤È²èÌÌ¾å¤Î¥µ¥¤¥º¤ÎÈæ¤ò»ØÄêdpi
+	TIFFSetField(image, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);	//åŸç‚¹é–‹å§‹ä½ç½®ã‚’æŒ‡å®š
+	//TIFFSetField(image, TIFFTAG_XRESOLUTION, 512.0);	//Xã«ãŠã‘ã‚‹pixels/resolutionã‚’æ„å‘³ã™ã‚‹ã€‚å®Ÿå¯¸ã®ã‚µã‚¤ã‚ºã¨ç”»é¢ä¸Šã®ã‚µã‚¤ã‚ºã®æ¯”ã‚’æŒ‡å®šdpi
 	//TIFFSetField(image, TIFFTAG_YRESOLUTION, 512.0);
 	//TIFFSetField(image, TIFFTAG_RESOLUTIONUNIT, RESUNIT_CENTIMETER);
   
 	// Write the information to the file
-	TIFFWriteEncodedStrip(image, 0, buffer, Isize * Jsize);	//²èÁü¥Ç¡¼¥¿¤òTiff·Á¼°¤Î¥Õ¥¡¥¤¥ë¤ËÊİÂ¸
+	TIFFWriteEncodedStrip(image, 0, buffer, Isize * Jsize);	//ç”»åƒãƒ‡ãƒ¼ã‚¿ã‚’Tiffå½¢å¼ã®ãƒ•ã‚¡ã‚¤ãƒ«ã«ä¿å­˜
 
 	// Close the file
 	TIFFClose(image);	
 }
 
-//²èÁü¥Õ¥¡¥¤¥ëÆÉ¤ß¹ş¤ß
+//ç”»åƒãƒ•ã‚¡ã‚¤ãƒ«èª­ã¿è¾¼ã¿
 void read_file()
 {
 	FILE  *fi; 
@@ -109,7 +100,7 @@ void read_file()
 	fread(dat,1,Isize*Jsize,fi);
 }
 
-//¥¦¥£¥ó¥É¥¦¤Ë²èÁü¤òÉ½¼¨¡Êº¸Â¦¡Ë
+//ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã«ç”»åƒã‚’è¡¨ç¤ºï¼ˆå·¦å´ï¼‰
 void view_imgW1(unsigned char ttt[Isize][Jsize])
 {
 	int i,j,k;
@@ -120,11 +111,11 @@ void view_imgW1(unsigned char ttt[Isize][Jsize])
 				k++;
 		}
 	}
-	//²èÁü¤òÉ½¼¨
+	//ç”»åƒã‚’è¡¨ç¤º
 	XPutImage(d,W1,GcW1,ImageW1,0,0,0,0,Jsize,Isize);
 }
 
-//¥¦¥£¥ó¥É¥¦¤Ë²èÁü¤òÉ½¼¨¡Ê±¦Â¦¡Ë
+//ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã«ç”»åƒã‚’è¡¨ç¤ºï¼ˆå³å´ï¼‰
 void view_imgW2(unsigned char ttt[Isize][Jsize])
 {
 	int i,j,k;
@@ -132,36 +123,15 @@ void view_imgW2(unsigned char ttt[Isize][Jsize])
 	for(i=0;i<Isize;i++){
 		for(j=0;j<Jsize;j++){
 			buff[k]=ttt[i][j]|ttt[i][j]<<8|ttt[i][j]<<16;
-			tiffdat[i][j] = ttt[i][j];	//±¦Â¦¥¦¥£¥ó¥É¥¦¤ËÉ½¼¨¤µ¤ì¤¿²èÁü¤òÊİÂ¸¤¹¤ë¤¿¤á¤Ë³ÊÇ¼
+			tiffdat[i][j] = ttt[i][j];	//å³å´ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã«è¡¨ç¤ºã•ã‚ŒãŸç”»åƒã‚’ä¿å­˜ã™ã‚‹ãŸã‚ã«æ ¼ç´
 				k++;
 		}
 	}
-	//²èÁü¤òÉ½¼¨
+	//ç”»åƒã‚’è¡¨ç¤º
 	XPutImage(d,W2,GcW2,ImageW2,0,0,0,0,Jsize,Isize);
 }
 
-void change_step()
-{
-}
-
-void noudo_henkan()
-{
-}
-
-void filter_operation()
-{
-}
-
-void median_filter()
-{
-}
-
-unsigned char
-sort(int a, int b)
-{
-}
-
-//ÆóÃÍ²½¤Î¤¿¤á¤ÎÁ°½èÍı´Ø¿ô¡§½èÍıÁ°¤Î²èÁü¤Î°ÜÆ°¤ò¹Ô¤¦
+//äºŒå€¤åŒ–ã®ãŸã‚ã®å‰å‡¦ç†é–¢æ•°ï¼šå‡¦ç†å‰ã®ç”»åƒã®ç§»å‹•ã‚’è¡Œã†
 void for_binary()
 {
 	int i,j;
@@ -171,24 +141,12 @@ void for_binary()
 				case 0:
 					image[i][j]=dat[i][j];
 				break;
-				case 1:
-					image[i][j]=dat1[i][j];
-				break;
-				case 2:
-					image[i][j]=dat2[i][j];
-				break;
-				case 3:
-					image[i][j]=dat3[i][j];
-				break;
-				case 4:
-					image[i][j]=dat4[i][j];
-				break;
 			}
 		}
 	}
 }
 
-//ÆóÃÍ²½¤ò¼Â¹Ô¤¹¤ë´Ø¿ô
+//äºŒå€¤åŒ–ã‚’å®Ÿè¡Œã™ã‚‹é–¢æ•°
 void binarization(int t)
 {
 	int i,j;
@@ -204,38 +162,157 @@ void binarization(int t)
 	view_imgW2(bin);
 }
 
-//window¤Î½é´üÀßÄê
+void p_tail()
+{
+    int i,j,k,S0,N0,N,t;
+    float diff,buf,p;
+
+    printf("S0 : ");
+    scanf("%d",&S0);
+
+    N=Isize*Jsize;
+    p=S0/(float)N;
+    diff=100000.;
+    for(k=1;k<254;k++){
+        N0=0;
+        for(i=0;i<Isize;i++){
+            for(j=0;j<Jsize;j++){
+                if(image[i][j]>=k) N0++;
+            }
+        }
+        buf=fabs(p-N0/(float)N);
+        if(buf<diff){
+            diff=buf;
+            t=k;
+        }
+    }
+
+    printf("P-ã‚¿ã‚¤ãƒ«æ³•ã§ã®ã—ãã„å€¤ã¯%dã§ã™\n",t);
+    binarization(t);
+}
+void hanbetubunseki()
+{
+    int i,j,k,t,s1,s2;
+    float M1,M2,w1,w2;
+    double sigma2,max_sigma;
+
+    max_sigma=0.;
+    for(k=1;k<254;k++){
+        w1=w2=s1=s2=0;
+        for(i=0;i<Isize;i++){
+            for(j=0;j<Jsize;j++){
+                if(image[i][j]<k){     //class1
+                        w1++;
+                        s1=s1+image[i][j];
+                }else{                     //class2
+                        w2++;
+                        s2=s2+image[i][j];
+                }
+            }
+        }
+        M1=s1/w1;      //class1ã®å¹³å‡
+        M2=s2/w2;      //class2ã®å¹³å‡
+
+        w1=w1/1000.0;   //è¨ˆç®—ãŒã‚ªãƒ¼ãƒãƒ•ãƒ­ãƒ¼ã™ã‚‹å¯èƒ½æ€§ãŒã‚ã‚‹ãŸã‚
+        w2=w2/1000.0;   //å„ç”»ç´ æ•°ã‚’é©å½“ãªå€¤ã§æ­£è¦åŒ–
+
+        sigma2= (w1*w2*(M1-M2)*(M1-M2))/((w1+w2)*(w1+w2));
+        if(sigma2>max_sigma){
+            max_sigma = sigma2;
+            t=k;
+		}
+    }
+    printf("åˆ¤åˆ¥åˆ†ææ³•ã§ã®ã—ãã„å€¤ã¯%dã§ã™\n",t);
+
+    binarization(t);
+}
+void
+expantion()    //æ‹¡å¤§
+{
+    int i,j,k;
+    for(i=1;i<Isize-1;i++){
+        for(j=1;j<Jsize-1;j++){
+            if(bin[i][j]==0){         //ã¨ã‚Šã‚ãˆãš4è¿‘å‚
+                if(bin[i-1][j]==255||
+                   bin[i+1][j]==255||
+                   bin[i][j+1]==255||
+                   bin[i][j-1]==255){
+                    bin[i][j]=200;
+                }
+            }
+        }
+    }
+    for(i=1;i<Isize-1;i++){
+        for(j=1;j<Jsize-1;j++){
+            if(bin[i][j]==200){
+                bin[i][j]=255;
+            }
+        }
+    }
+    view_imgW2(bin);
+}
+
+void
+contraction()     //ç¸®å°
+{
+    int i,j,k;
+    for(i=1;i<Isize-1;i++){
+        for(j=1;j<Jsize-1;j++){
+            if(bin[i][j]==255){         //ã¨ã‚Šã‚ãˆãš4è¿‘å‚
+                if(bin[i-1][j]==0||
+                   bin[i+1][j]==0||
+                   bin[i][j+1]==0||
+                   bin[i][j-1]==0){
+                    bin[i][j]=200;
+                }
+            }
+        }
+    }
+    for(i=1;i<Isize-1;i++){
+        for(j=1;j<Jsize-1;j++){
+            if(bin[i][j]==200){
+                bin[i][j]=0;
+            }
+        }
+    }
+    view_imgW2(bin);
+ 
+}
+
+
+
+//windowã®åˆæœŸè¨­å®š
 void init_window()
 {
 	int i;
 
-	//window¤ò³«¤¯Á°¤Î½é´üÀßÄê
+	//windowã‚’é–‹ãå‰ã®åˆæœŸè¨­å®š
 	//d=XOpenDisplay(NULL);	
-  	// X¥µ¡¼¥Ğ¤È¤ÎÀÜÂ³
+  	// Xã‚µãƒ¼ãƒã¨ã®æ¥ç¶š
 	if( (d = XOpenDisplay( NULL )) == NULL ) {
-		fprintf( stderr, "£Ø¥µ¡¼¥Ğ¤ËÀÜÂ³¤Ç¤­¤Ş¤»¤ó\n" );
+		fprintf( stderr, "ï¼¸ã‚µãƒ¼ãƒã«æ¥ç¶šã§ãã¾ã›ã‚“\n" );
 		exit(1);
 	}
 	
-	// ¥Ç¥£¥¹¥×¥ì¥¤ÊÑ¿ô¤Î¼èÆÀ
-	Rtw=RootWindow(d,0);	//¥ë¡¼¥È¥¦¥£¥ó¥É¥¦¤ò»ØÄê
+	// ãƒ‡ã‚£ã‚¹ãƒ—ãƒ¬ã‚¤å¤‰æ•°ã®å–å¾—
+	Rtw=RootWindow(d,0);	//ãƒ«ãƒ¼ãƒˆã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’æŒ‡å®š
 	Vis=XDefaultVisual(d,0);
 	Dep=XDefaultDepth(d,0);
 
-	//window¤òºîÀ®
-	W=XCreateSimpleWindow(d,Rtw,0,0,Xsize,Ysize,2,Fcol,Bcol);	//ÇØ·Ê¥¦¥£¥ó¥É¥¦
-	W1=XCreateSimpleWindow(d,W,0,0,Jsize,Isize,2,Fcol,Bcol);	//²èÁüÉ½¼¨ÍÑ¥¦¥£¥ó¥É¥¦¡Êº¸Â¦¡Ë
-	W2=XCreateSimpleWindow(d,W,Jsize,0,Jsize,Isize,2,Fcol,Bcol);	//²èÁüÉ½¼¨ÍÑ¥¦¥£¥ó¥É¥¦¡Ê±¦Â¦¡Ë
-	Side=XCreateSimpleWindow(d,W,Jsize*2+5,0,Right,Isize,2,Fcol,Bcol);	//¥µ¥¤¥É¥¦¥£¥ó¥É¥¦
+	//windowã‚’ä½œæˆ
+	W=XCreateSimpleWindow(d,Rtw,0,0,Xsize,Ysize,2,Fcol,Bcol);	//èƒŒæ™¯ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦
+	W1=XCreateSimpleWindow(d,W,0,0,Jsize,Isize,2,Fcol,Bcol);	//ç”»åƒè¡¨ç¤ºç”¨ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ï¼ˆå·¦å´ï¼‰
+	W2=XCreateSimpleWindow(d,W,Jsize,0,Jsize,Isize,2,Fcol,Bcol);	//ç”»åƒè¡¨ç¤ºç”¨ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ï¼ˆå³å´ï¼‰
+	Side=XCreateSimpleWindow(d,W,Jsize*2+5,0,Right,Isize,2,Fcol,Bcol);	//ã‚µã‚¤ãƒ‰ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦
 	for(i=0;i<Bnum;i++){
-		Bt[i]=XCreateSimpleWindow(d,Side,0,30*i,BS,30,2,Fcol,Bcol);	//¥Ü¥¿¥óºîÀ®
-		XSelectInput(d,Bt[i],ExposureMask | ButtonPressMask);	//¥¦¥£¥ó¥É¥¦¤¬É½¼¨¤µ¤ì¤¿»şor¥Ü¥¿¥ó¤¬²¡¤µ¤ì¤¿»ş¤ËX¥µ¡¼¥Ğ¤«¤éÄÌÃÎ
+		Bt[i]=XCreateSimpleWindow(d,Side,0,30*i,BS,30,2,Fcol,Bcol);	//ãƒœã‚¿ãƒ³ä½œæˆ
+		XSelectInput(d,Bt[i],ExposureMask | ButtonPressMask);	//ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãŒè¡¨ç¤ºã•ã‚ŒãŸæ™‚orãƒœã‚¿ãƒ³ãŒæŠ¼ã•ã‚ŒãŸæ™‚ã«Xã‚µãƒ¼ãƒã‹ã‚‰é€šçŸ¥
 	}
 
 	XSelectInput(d,W1,ButtonPressMask);	
 	XSelectInput(d,W2,ButtonPressMask);	
 
-	//¥¦¥£¥ó¥É¥¦¤ò²èÌÌ¤ËÉ½¼¨
+	//ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’ç”»é¢ã«è¡¨ç¤º
 	XMapWindow(d,W);
 	XMapSubwindows(d,W1);
 	XMapSubwindows(d,W2);
@@ -243,15 +320,15 @@ void init_window()
 	XMapSubwindows(d,W);
 }
 
-//É½¼¨²èÁü¤Î½é´üÀßÄê
+//è¡¨ç¤ºç”»åƒã®åˆæœŸè¨­å®š
 void init_image()
 {
-	//¥Ç¥Õ¥©¥ë¥È¤Î¥°¥é¥Õ¥£¥Ã¥¯¥¹¥³¥ó¥Æ¥­¥¹¥È¤òÀ¸À®
+	//ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®ã‚°ãƒ©ãƒ•ã‚£ãƒƒã‚¯ã‚¹ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆã‚’ç”Ÿæˆ
 	Gc  = XCreateGC(d,W,0,0);
 	GcW1= XCreateGC(d,W1,0,0);
 	GcW2= XCreateGC(d,W1,0,0);
   
-	//É½¼¨²èÁü¤ÎÀßÄê
+	//è¡¨ç¤ºç”»åƒã®è¨­å®š
 	ImageW1=XCreateImage(d,Vis,Dep,ZPixmap,0,NULL,Jsize,Isize,
 			BitmapPad(d),0);
 	ImageW1->data = (char *)buff;
@@ -261,27 +338,27 @@ void init_image()
 	ImageW2->data = (char *)buff;
 }
 
-//¥¤¥Ù¥ó¥ÈÈ¯À¸ÍÑ´Ø¿ô
+//ã‚¤ãƒ™ãƒ³ãƒˆç™ºç”Ÿç”¨é–¢æ•°
 void event_select()
 {
 	int x,y,t;
 	while(1){
-		//¥¤¥Ù¥ó¥ÈÆÉ¤ß¹ş¤ß
+		//ã‚¤ãƒ™ãƒ³ãƒˆèª­ã¿è¾¼ã¿
 		XNextEvent(d,&Ev);
 		switch(Ev.type){
-			//¥¦¥£¥ó¥É¥¦¤¬É½¼¨¤µ¤ì¤¿¾ì¹ç
+			//ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãŒè¡¨ç¤ºã•ã‚ŒãŸå ´åˆ
 			case Expose :
-				XSetForeground(d,Gc,Fcol);	//Á°·Ê¿§¤ÎÀßÄê
-				XSetBackground(d,Gc,10);	//ÇØ·Ê¿§¤ÎÀßÄê
-				XDrawImageString(d,Bt[0],Gc,28,21,"Load",4);	//¥Ü¥¿¥ó¤ØÊ¸»úÎó¤òÉÁ²è
+				XSetForeground(d,Gc,Fcol);	//å‰æ™¯è‰²ã®è¨­å®š
+				XSetBackground(d,Gc,10);	//èƒŒæ™¯è‰²ã®è¨­å®š
+				XDrawImageString(d,Bt[0],Gc,28,21,"Load",4);	//ãƒœã‚¿ãƒ³ã¸æ–‡å­—åˆ—ã‚’æç”»
 				XDrawImageString(d,Bt[1],Gc,28,21,"ViewW1",6);
 				XDrawImageString(d,Bt[2],Gc,28,21,"ViewW2",6);
 				XDrawImageString(d,Bt[3],Gc,28,21,"Save",4);
-				XDrawImageString(d,Bt[4],Gc,28,21,"STEP",4);
-				XDrawImageString(d,Bt[5],Gc,28,21,"NOUD",4);
-				XDrawImageString(d,Bt[6],Gc,28,21,"FILT",4);
-				XDrawImageString(d,Bt[7],Gc,28,21,"MEDIAN",6);
-				XDrawImageString(d,Bt[8],Gc,28,21,"binary",6);
+				XDrawImageString(d,Bt[4],Gc,28,21,"binary",6);
+				XDrawImageString(d,Bt[5],Gc,28,21,"ptail",5);
+				XDrawImageString(d,Bt[6],Gc,28,21,"OTSU",4);
+				XDrawImageString(d,Bt[7],Gc,28,21,"EXPAND",6);
+				XDrawImageString(d,Bt[8],Gc,28,21,"contraction",11);
 				XDrawImageString(d,Bt[Bnum-1],Gc,28,21,"Quit",4);
 			break;
 			case ButtonPress :
@@ -301,26 +378,24 @@ void event_select()
 					tiff_save(tiffdat);
 				}
 				if(Ev.xany.window == Bt[4]){
-					flag=1;
-					change_step();
-				}
-				if(Ev.xany.window == Bt[5]){
-					flag=2;
-					noudo_henkan();
-				}
-				if(Ev.xany.window == Bt[6]){
-					flag=3;
-					filter_operation();
-				}
-				if(Ev.xany.window == Bt[7]){
-					flag=4;
-					median_filter();
-				}
-				if(Ev.xany.window == Bt[8]){
 					for_binary();
 					printf("Threshold value : ");
 					scanf("%d",&t);
 					binarization(t);
+				}
+				if(Ev.xany.window == Bt[5]){
+					for_binary();
+					p_tail();
+				}
+				if(Ev.xany.window == Bt[6]){
+					for_binary();
+					hanbetubunseki();
+				}
+				if(Ev.xany.window == Bt[7]){
+					expantion();
+				}
+				if(Ev.xany.window == Bt[8]){
+					contraction();
 				}
 				if(Ev.xany.window == Bt[Bnum-1]){
 					exit(1);
